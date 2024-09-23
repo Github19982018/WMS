@@ -14,6 +14,13 @@ collection = db['test']
 
 
 # Create your views here.
+@api_view(['GET'])
+def purchases(request):
+    collection = db['purchases']
+    data = collection.find({'status':'pending'})
+    return Response(data)
+
+
 @api_view(['POST'])
 def approve(request):
     if request.method == "POST":

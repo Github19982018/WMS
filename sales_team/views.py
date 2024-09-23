@@ -13,6 +13,31 @@ db = client.test_database
 
 
 # Create your views here.
+@api_view(['GET'])
+def packages(request):
+    collection = db['packages']
+    data = collection.find({'status':'pending'})
+    return Response(data)
+
+@api_view(['GET'])
+def ships(request):
+    collection = db['ships']
+    data = collection.find({'status':'pending'})
+    return Response(data)
+
+@api_view(['GET'])
+def package(request,id):
+    collection = db['packages']
+    data = collection.find_one({'_id':id})
+    return Response(data)
+
+@api_view(['GET'])
+def ship(request,id):
+    collection = db['ships']
+    data = collection.find_one({'_id':id})
+    return Response(data)
+        
+        
 @api_view(['POST'])
 def backend_package_approve(request):
     collection = db['packages']
@@ -61,7 +86,7 @@ def frontend_package_approve(request):
 
         
 @api_view(['POST'])
-def frontend_ship_approve(request,status):
+def frontend_ship_approve(request):
     collection = db['shipment']
     if request.method == "POST":
         sale = request.data
@@ -69,9 +94,9 @@ def frontend_ship_approve(request,status):
         if data:
             url=env('BASE_URL')+'/sales/ships_api'
             try:
-                requests.post(url,{'ref':data.ref, 'status':status})
+                requests.post(url,{'ref':data.ref, 'status':sale.status})
                 collection.update_one({'ref':sale['ref']},{'$set':{
-                    'status':status
+                    'status':sale.status_val
                 }})
                 return Response({'success'})
             except:

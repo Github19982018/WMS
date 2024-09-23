@@ -12,6 +12,12 @@ client = pymongo.MongoClient()
 db = client.test_database
 collection = db['supplier']
 
+@api_view(['GET'])
+def purchases(request):
+    data = collection.find()
+    return Response(data)
+
+
 
 @api_view(['POST'])
 def backend(request):
