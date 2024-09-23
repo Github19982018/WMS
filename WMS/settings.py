@@ -18,9 +18,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
+import environ
+env = environ.Env()
+environ.Env.read_env()
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-bv!repcqzf(xpr-m_q@2_mb$e6xg%z_1+4xiut$e86bc2%ak^e'
+SECRET_KEY = env('BASE_URL')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -38,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'purchase_team'
+    'purchase_team',
+    'sales_team',
 ]
 
 MIDDLEWARE = [
