@@ -4,22 +4,26 @@ from rest_framework.decorators import api_view
 import pymongo
 import requests
 import environ 
+from bson.json_util import dumps
 
 env = environ.Env()
 environ.Env.read_env()
 
 client = pymongo.MongoClient()
 db = client.test_database
-collection = db['test']
+collection = db['purchase']
 
 
 # Create your views here.
 @api_view(['GET'])
 def purchases(request):
-    collection = db['purchases']
-    data = collection.find({'status':'pending'})
-    return Response(data)
+    data = collection.find({})
+    return Response(dumps(data))
 
+@api_view(['GET'])
+def purchase(request,id):
+    data = collection.find({'ref':id})
+    return Response(dumps(data))
 
 @api_view(['POST'])
 def approve(request):
@@ -35,7 +39,6 @@ def approve(request):
 
 @api_view(['POST'])
 def front_approve(request):
-    collection = db['packages']
     if request.method == "POST":
         sale = request.data
         data = (collection.find_one({'ref':sale['ref']}))

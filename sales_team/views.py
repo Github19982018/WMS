@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 import pymongo
 import requests
+from bson.json_util import dumps
 import environ
 
 env = environ.Env()
@@ -17,25 +18,25 @@ db = client.test_database
 def packages(request):
     collection = db['packages']
     data = collection.find({'status':'pending'})
-    return Response(data)
+    return Response(dumps(data))
 
 @api_view(['GET'])
 def ships(request):
     collection = db['ships']
     data = collection.find({'status':'pending'})
-    return Response(data)
+    return Response(dumps(data))
 
 @api_view(['GET'])
 def package(request,id):
     collection = db['packages']
     data = collection.find_one({'_id':id})
-    return Response(data)
+    return Response(dumps(data))
 
 @api_view(['GET'])
 def ship(request,id):
     collection = db['ships']
     data = collection.find_one({'_id':id})
-    return Response(data)
+    return Response(dumps(data))
         
         
 @api_view(['POST'])

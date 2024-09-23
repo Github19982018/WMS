@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view
 import pymongo
 import requests
 import environ
+from bson.json_util import dumps
 
 env = environ.Env()
 environ.Env.read_env()
@@ -15,8 +16,12 @@ collection = db['supplier']
 @api_view(['GET'])
 def purchases(request):
     data = collection.find()
-    return Response(data)
+    return Response(dumps(data))
 
+@api_view(['GET'])
+def purchase(request,id):
+    data = collection.find({'ref':id})
+    return Response(dumps(data))
 
 
 @api_view(['POST'])

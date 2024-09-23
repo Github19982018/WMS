@@ -1,7 +1,9 @@
 from django.urls import path
-from sales_team import views
+from supplier import views
 
 urlpatterns = [
     path('',views.backend),
-    path('/front/',views.frontend),
+    path('front/',views.frontend),
+    path('purchases/',views.purchases),
+    path('purchase/',views.purchase),
 ]
