@@ -5,5 +5,5 @@ urlpatterns = [
     path('',views.backend),
     path('front/',views.frontend),
     path('purchases/',views.purchases),
-    path('purchase/',views.purchase),
+    path('purchases/<int:id>',views.purchase),
 ]

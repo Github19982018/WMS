@@ -8,6 +8,6 @@ urlpatterns = [
     path('ships/front/',views.frontend_ship_approve),
     path('packages/',views.packages,name='packages'),
     path('ships/',views.ships,name='ships'),
-    path('package/',views.package,name='package'),
-    path('ship/',views.ship,name='ship'),
+    path('packages/<int:id>',views.package,name='package'),
+    path('ships/<int:id>',views.ship,name='ship'),
 ]
