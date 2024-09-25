@@ -27,14 +27,17 @@ def purchase(request,id):
 
 @api_view(['POST'])
 def approve(request):
-    if request.method == "POST":
-        purch = dict(request.data)
-        if ('ref' in purch) and (not collection.find_one({'ref':purch['ref']})):
-            purch['status'] = 'pending'
-            collection.insert_one(purch)
-            return Response({'success'},status=201)
-        else:
-            return Response({'invalid data'},status=400)
+    try:
+        if request.method == "POST":
+            purch = dict(request.data)
+            if ('ref' in purch) and (not collection.find_one({'ref':purch['ref']})):
+                purch['status'] = 'pending'
+                collection.insert_one(purch)
+                return Response({'success'},status=201)
+            else:
+                return Response({'invalid data'},status=400)
+    except:
+        return Response({'error':'error updating data'},status=400)
 
 
 @api_view(['POST'])
@@ -47,17 +50,17 @@ def front_approve(request):
             try:
                 response = requests.post(url,{'ref':data['ref']})
                 if response.status_code == 201:
-                    collection.update_one({'ref':purchase['ref']},{'$set':{
+                    res = collection.update_one({'ref':purchase['ref']},{'$set':{
                         'status':'approved'
                 }})
-                    return Response({'success'},status=201)
+                    return Response({'data':dumps(res)},status=201)
                 else:
                     return Response({'error':'cant update the data'},status=400)
             except pymongo.errors as message:
                 return Response(data=message,status=400)
             except requests.exceptions:
-                return Response({'Operation failed'},status=404)
+                return Response({'error':'Operation failed'},status=404)
         else:
-            return Response({'invalid data'},status=404)
+            return Response({'error':'invalid data'},status=404)
 
 

@@ -1,3 +1,4 @@
+import pymongo.errors
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 import pymongo
@@ -9,7 +10,7 @@ env = environ.Env()
 environ.Env.read_env()
 
 client = pymongo.MongoClient()
-db = client.test_database
+db = client.wms
 collection = db['supplier']
 
 @api_view(['GET'])
@@ -25,33 +26,38 @@ def purchase(request,id):
 
 @api_view(['POST'])
 def backend(request):
-    if request.method == "POST":
+    try:
         purchase = dict(request.data)
         if ('ref' in purchase) and (not collection.find_one({'ref':purchase['ref']})):
             purchase['status'] = 'pending'
             collection.insert_one(purchase)
-            return Response({'success'},status=201)
+            return Response({'data':'success'},status=201)
         else:
-            return Response({'invalid data'},status=400)
+            return Response({'error':'invalid data'},status=400)
+    except:
+            return Response({'error':'failed'},status=400)
+        
     
     
 @api_view(['POST'])
 def frontend(request):
     if request.method == "POST":
         purchase = request.data
-        data = (collection.find_one({'ref':purchase['ref']}))
+        data = dict(collection.find_one({'ref':purchase['ref']}))
         if data:
-            url=env('BASE_URL')+'/purchase_api/'
+            url=env('BASE_URL')+'/purchases/supplier/'
             try:
-                response = requests.post(url,{'ref':data.ref,'status':purchase.status})
+                response = requests.post(url,{'ref':data['ref'],'status':purchase['status'],'status_val':purchase['status_val']})
+                collection.update_one({'ref':purchase['ref']},{'$set':{
+                    'status':purchase['status_val']
+                }})
                 if response.status_code == 201:
-                    collection.update_one({'ref':purchase['ref']},{'$set':{
-                        'status':purchase.status_val
-                    }})
-                    return Response({'success'},status=201)
+                    return Response({'data':'order updated'},status=201)
                 else:
                     return Response({'error':'cant update the data'},status=400)                    
-            except:
-                return Response({'Operation failed'},status=404)
+            except requests.ConnectionError:
+                return Response(data={'error':'Operation failed'},status=401)
+            except pymongo.errors.OperationFailure:
+                return Response(data={'error':'Operation failed'},status=402)
         else:
-            return Response({'invalid data'},status=404)
+            return Response(data={'error':'invalid data'},status=404)

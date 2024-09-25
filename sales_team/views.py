@@ -29,13 +29,13 @@ def ships(request):
 @api_view(['GET'])
 def package(request,id):
     collection = db['packages']
-    data = collection.find_one({'_id':id})
+    data = collection.find_one({'ref':id})
     return Response(dumps(data))
 
 @api_view(['GET'])
 def ship(request,id):
     collection = db['ships']
-    data = collection.find_one({'_id':id})
+    data = collection.find_one({'ref':id})
     return Response(dumps(data))
         
         
@@ -76,10 +76,10 @@ def frontend_package_approve(request):
             url=env('BASE_URL')+'/sales/package_api'
             try:
                 requests.post(url,{'ref':data.ref})
-                collection.update_one({'ref':sale['ref']},{'$set':{
+                res = collection.update_one({'ref':sale['ref']},{'$set':{
                     'status':'approved'
                 }})
-                return Response({'success'})
+                return Response({'data':dumps(res)},status=201)
             except:
                 return Response({'Operation failed'})
         else:
@@ -96,10 +96,10 @@ def frontend_ship_approve(request):
             url=env('BASE_URL')+'/sales/ships_api'
             try:
                 requests.post(url,{'ref':data.ref, 'status':sale.status})
-                collection.update_one({'ref':sale['ref']},{'$set':{
+                res = collection.update_one({'ref':sale['ref']},{'$set':{
                     'status':sale.status_val
                 }})
-                return Response({'success'})
+                return Response({'data':dumps(data)},status=201)
             except:
                 return Response({'Operation failed'})
         else:
