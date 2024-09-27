@@ -116,12 +116,13 @@ def frontend_package_approve(request):
             url=env('BASE_URL')+'/sales/package_api/'
             try:
                 res = requests.post(url,{'ref':sale['ref']})
-                print(res)
                 if res.status_code == 201:
                     res = collection.update_one({'ref':sale['ref']},{'$set':{
                         'status':'approved'
                     }})
                     return Response({'data':'approved successfully'},status=201)
+                else:
+                    return Response({'data':'Updation error'},status=403)
             except requests.exceptions.ConnectionError:
                 return Response({'Operation failed'},status=500)
         else:
