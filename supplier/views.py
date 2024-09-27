@@ -29,15 +29,16 @@ def backend(request):
     try:
         purchase = dict(request.data)
         val = collection.find_one({'ref':purchase['ref']})
-        if ('ref' in purchase) and (not val):
-            purchase['status'] = 'pending'
-            collection.insert_one(purchase)
-            return Response({'data':'success'},status=201)
-        elif ('ref' in purchase) and val:
-            collection.update_one({'ref':purchase['ref']},{'$set':{'items':purchase['items'],'package':purchase['package']}})
-            return Response({'data':'success'},status=201)
+        if ('ref' in purchase):
+            if val:
+                collection.update_one({'ref':purchase['ref']},{'$set':{'items':purchase['items'],'package':purchase['package']}})
+                return Response({'data':'order updated'},status=201)
+            else:
+                purchase['status'] = 'pending'
+                collection.insert_one(purchase)
+                return Response({'data':'order received'},status=201)
         else:
-            return Response({'error':'invalid data'},status=400)
+            return Response({'error':'invalid order'},status=400)
     except:
             return Response({'error':'updation failed'},status=400)
         
@@ -48,23 +49,26 @@ def frontend(request):
     if request.method == "POST":
         purchase = request.data
         data = dict(collection.find_one({'ref':purchase['ref']}))
-        if data and data.status != 'cancelled':
-            url=env('BASE_URL')+'/purchases/supplier/'
-            try:
-                response = requests.post(url,{'ref':data['ref'],'status':purchase['status'],'status_val':purchase['status_val']})
-                collection.update_one({'ref':purchase['ref']},{'$set':{
-                    'status':purchase['status_val']
-                }})
-                if response.status_code == 201:
-                    return Response({'data':'order updated'},status=201)
-                else:
-                    return Response({'error':'cant update the data'},status=400)                    
-            except requests.ConnectionError:
-                return Response(data={'error':'Operation failed'},status=401)
-            except pymongo.errors.OperationFailure:
-                return Response(data={'error':'Operation failed'},status=402)
+        if data: 
+            if data.status != 'cancelled':
+                url=env('BASE_URL')+'/purchases/supplier/'
+                try:
+                    response = requests.post(url,{'ref':data['ref'],'status':purchase['status'],'status_val':purchase['status_val']})
+                    collection.update_one({'ref':purchase['ref']},{'$set':{
+                        'status':purchase['status_val']
+                    }})
+                    if response.status_code == 201:
+                        return Response({'data':'order updated'},status=201)
+                    else:
+                        return Response({'error':'cant update the data'},status=400)                    
+                except requests.ConnectionError:
+                    return Response(data={'error':'Operation failed'},status=401)
+                except pymongo.errors.OperationFailure:
+                    return Response(data={'error':'Operation failed'},status=402)
+            else:
+                return Response(data={'error':'already cancelled order!'},status=404)
         else:
-            return Response(data={'error':'invalid order or order cancelled'},status=404)
+            return Response(data={'error':'invalid order'},status=404)
         
 @api_view(['POST'])
 def cancel(request):
@@ -75,6 +79,6 @@ def cancel(request):
             collection.update_one({'ref':purchase['ref']},{'$set':{'status':'cancelled'}})
             return Response({'data':'success'},status=201)
         else:
-            return Response({'invalid data'},status=400)
+            return Response({'invalid order'},status=400)
     except:
         return Response({'error':'error updating data'},status=400)
