@@ -34,7 +34,7 @@ def cancel(request):
             collection.update_one({'ref':purchase['ref']},{'$set':{'status':'cancelled'}})
             return Response({'data':'success'},status=201)
         else:
-            return Response({'invalid data'},status=400)
+            return Response({'invalid order'},status=400)
     except:
         return Response({'error':'error updating data'},status=400)
     
@@ -51,7 +51,7 @@ def approve(request):
             collection.update_one({'ref':purchase['ref']},{'$set':{'items':purchase['items'],'package':purchase['package']}})
             return Response({'data':'success'},status=201)
         else:
-            return Response({'invalid data'},status=400)
+            return Response({'invalid order'},status=400)
     except:
         return Response({'error':'error updating data'},status=400)
 
@@ -61,7 +61,7 @@ def front_approve(request):
     if request.method == "POST":
         purchase = request.data
         data = (collection.find_one({'ref':purchase['ref']}))
-        if data:
+        if data and data.status == 'pending':
             url=env('BASE_URL')+'/purchases/purchase/'
             try:
                 response = requests.post(url,{'ref':data['ref']})
@@ -71,14 +71,14 @@ def front_approve(request):
                 }})
                     return Response({'data':'updated'},status=201)
                 else:
-                    return Response({'error':'cant update the data'},status=400)
+                    return Response({'error':'cant send or update the data on server'},status=400)
             except pymongo.errors.InvalidOperation as message:
                 return Response(data=message,status=400)
             except requests.exceptions.ConnectionError:
-                return Response({'error':'Operation failed'},status=501)
+                return Response({'error':'database Operation failed'},status=501)
             except requests.exceptions.Timeout:
-                return Response({'error':'Operation failed'},status=501)
+                return Response({'error':'database Operation failed'},status=501)
         else:
-            return Response({'error':'invalid data'},status=404)
+            return Response({'error':'invalid order or already updated'},status=404)
 
 

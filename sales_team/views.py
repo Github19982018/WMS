@@ -105,7 +105,7 @@ def frontend_package_approve(request):
     if request.method == "POST":
         sale = request.data
         data = (collection.find_one({'ref':sale['ref']}))
-        if data:
+        if data and data.status == 'pending': 
             url=env('BASE_URL')+'/sales/package_api/'
             try:
                 res = requests.post(url,{'ref':sale['ref']})
@@ -118,7 +118,7 @@ def frontend_package_approve(request):
             except requests.exceptions.ConnectionError:
                 return Response({'Operation failed'})
         else:
-            return Response({'invalid data'})
+            return Response({'invalid order or already updated'})
 
         
 @api_view(['POST'])
@@ -127,7 +127,7 @@ def frontend_ship_approve(request):
     if request.method == "POST":
         sale = request.data
         data = (collection.find_one({'ref':sale['ref']}))
-        if data:
+        if data and data.status != 'cancelled':
             url=env('BASE_URL')+'/sales/ships_api/'
             try:
                 res =requests.post(url,{'ref':data['ref'], 'status':sale['status']})
@@ -137,14 +137,14 @@ def frontend_ship_approve(request):
                     }})
                     return Response({'data':dumps(data)},status=201)
                 else:
-                    return Response({'error':'Cant update data'},status=403)
+                    return Response({'error':'Cant update data on server'},status=403)
                     
             except requests.ConnectionError:
                 return Response({'Operation failed'},status=500)
             except pymongo.errors.InvalidOperation:
                 return Response({'Operation failed'},status=501)
         else:
-            return Response({'invalid data'},status=402)
+            return Response({'invalid order or order cancelled'},status=402)
 
 
 

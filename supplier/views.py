@@ -39,8 +39,7 @@ def backend(request):
         else:
             return Response({'error':'invalid data'},status=400)
     except:
-            # return Response({'error':'updation failed'},status=400)
-            pass
+            return Response({'error':'updation failed'},status=400)
         
     
     
@@ -49,7 +48,7 @@ def frontend(request):
     if request.method == "POST":
         purchase = request.data
         data = dict(collection.find_one({'ref':purchase['ref']}))
-        if data:
+        if data and data.status != 'cancelled':
             url=env('BASE_URL')+'/purchases/supplier/'
             try:
                 response = requests.post(url,{'ref':data['ref'],'status':purchase['status'],'status_val':purchase['status_val']})
@@ -65,7 +64,7 @@ def frontend(request):
             except pymongo.errors.OperationFailure:
                 return Response(data={'error':'Operation failed'},status=402)
         else:
-            return Response(data={'error':'invalid data'},status=404)
+            return Response(data={'error':'invalid order or order cancelled'},status=404)
         
 @api_view(['POST'])
 def cancel(request):
