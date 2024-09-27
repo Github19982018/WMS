@@ -28,14 +28,19 @@ def purchase(request,id):
 def backend(request):
     try:
         purchase = dict(request.data)
-        if ('ref' in purchase) and (not collection.find_one({'ref':purchase['ref']})):
+        val = collection.find_one({'ref':purchase['ref']})
+        if ('ref' in purchase) and (not val):
             purchase['status'] = 'pending'
             collection.insert_one(purchase)
+            return Response({'data':'success'},status=201)
+        elif ('ref' in purchase) and val:
+            collection.update_one({'ref':purchase['ref']},{'$set':{'items':purchase['items'],'package':purchase['package']}})
             return Response({'data':'success'},status=201)
         else:
             return Response({'error':'invalid data'},status=400)
     except:
-            return Response({'error':'failed'},status=400)
+            # return Response({'error':'updation failed'},status=400)
+            pass
         
     
     
@@ -61,3 +66,16 @@ def frontend(request):
                 return Response(data={'error':'Operation failed'},status=402)
         else:
             return Response(data={'error':'invalid data'},status=404)
+        
+@api_view(['POST'])
+def cancel(request):
+    try:
+        purchase = dict(request.data)
+        val = collection.find_one({'ref':purchase['ref']})
+        if ('ref' in purchase) and val:
+            collection.update_one({'ref':purchase['ref']},{'$set':{'status':'cancelled'}})
+            return Response({'data':'success'},status=201)
+        else:
+            return Response({'invalid data'},status=400)
+    except:
+        return Response({'error':'error updating data'},status=400)

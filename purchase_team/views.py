@@ -26,16 +26,32 @@ def purchase(request,id):
     return Response(dumps(data))
 
 @api_view(['POST'])
+def cancel(request):
+    try:
+        purchase = dict(request.data)
+        val = collection.find_one({'ref':purchase['ref']})
+        if ('ref' in purchase) and val:
+            collection.update_one({'ref':purchase['ref']},{'$set':{'status':'cancelled'}})
+            return Response({'data':'success'},status=201)
+        else:
+            return Response({'invalid data'},status=400)
+    except:
+        return Response({'error':'error updating data'},status=400)
+    
+@api_view(['POST'])
 def approve(request):
     try:
-        if request.method == "POST":
-            purch = dict(request.data)
-            if ('ref' in purch) and (not collection.find_one({'ref':purch['ref']})):
-                purch['status'] = 'pending'
-                collection.insert_one(purch)
-                return Response({'success'},status=201)
-            else:
-                return Response({'invalid data'},status=400)
+        purchase = dict(request.data)
+        val = collection.find_one({'ref':purchase['ref']})
+        if ('ref' in purchase) and (not val):
+            purchase['status'] = 'pending'
+            collection.insert_one(purchase)
+            return Response({'data':'success'},status=201)
+        elif ('ref' in purchase) and val:
+            collection.update_one({'ref':purchase['ref']},{'$set':{'items':purchase['items'],'package':purchase['package']}})
+            return Response({'data':'success'},status=201)
+        else:
+            return Response({'invalid data'},status=400)
     except:
         return Response({'error':'error updating data'},status=400)
 
@@ -50,16 +66,18 @@ def front_approve(request):
             try:
                 response = requests.post(url,{'ref':data['ref']})
                 if response.status_code == 201:
-                    res = collection.update_one({'ref':purchase['ref']},{'$set':{
+                    collection.update_one({'ref':purchase['ref']},{'$set':{
                         'status':'approved'
                 }})
-                    return Response({'data':dumps(res)},status=201)
+                    return Response({'data':'updated'},status=201)
                 else:
                     return Response({'error':'cant update the data'},status=400)
-            except pymongo.errors as message:
+            except pymongo.errors.InvalidOperation as message:
                 return Response(data=message,status=400)
-            except requests.exceptions:
-                return Response({'error':'Operation failed'},status=404)
+            except requests.exceptions.ConnectionError:
+                return Response({'error':'Operation failed'},status=501)
+            except requests.exceptions.Timeout:
+                return Response({'error':'Operation failed'},status=501)
         else:
             return Response({'error':'invalid data'},status=404)
 

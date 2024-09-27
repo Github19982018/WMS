@@ -5,5 +5,6 @@ urlpatterns = [
     path('',views.purchases),
     path('<int:id>/',views.purchase),
     path('approve/',views.approve),
+    path('cancel/',views.cancel),
     path('front/approve/',views.front_approve),
 ]

@@ -56,6 +56,34 @@ def backend_package_approve(request):
         else:
             return Response({'invalid data'})
 
+@api_view(['POST'])
+def package_cancel(request):
+    collection = db['packages']
+    try:
+        purchase = dict(request.data)
+        val = collection.find_one({'ref':purchase['ref']})
+        if ('ref' in purchase) and val:
+            collection.update_one({'ref':purchase['ref']},{'$set':{'status':'cancelled'}})
+            return Response({'data':'success'},status=201)
+        else:
+            return Response({'invalid data'},status=400)
+    except:
+        return Response({'error':'error updating data'},status=400)
+    
+@api_view(['POST'])
+def ship_cancel(request):
+    collection = db['ships']
+    try:
+        purchase = dict(request.data)
+        val = collection.find_one({'ref':purchase['ref']})
+        if ('ref' in purchase) and val:
+            collection.update_one({'ref':purchase['ref']},{'$set':{'status':'cancelled'}})
+            return Response({'data':'success'},status=201)
+        else:
+            return Response({'invalid data'},status=400)
+    except:
+        return Response({'error':'error updating data'},status=400)
+
     
         
 @api_view(['POST'])
