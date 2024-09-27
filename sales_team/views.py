@@ -64,13 +64,13 @@ def package_cancel(request):
     collection = db['packages']
     try:
         purchase = dict(request.data)
-        val = collection.find_one({'ref':purchase['ref']})
-        if ('ref' in purchase) and val:
-            collection.update_one({'ref':purchase['ref']},{'$set':{'status':'cancelled'}})
+        # val = collection.find_one({'ref':{'$in':purchase['ref']}})
+        if ('ref' in purchase):
+            collection.update_many({'ref':{'$in':purchase['ref']}},{'$set':{'status':'cancelled'}})
             return Response({'data':'cancelled'},status=201)
         else:
             return Response({'error':'invalid order'},status=400)
-    except:
+    except pymongo.errors.PyMongoError:
         return Response({'error':'error updating data'},status=400)
     
 @api_view(['POST'])
@@ -78,9 +78,9 @@ def ship_cancel(request):
     collection = db['ships']
     try:
         purchase = dict(request.data)
-        val = collection.find_one({'ref':purchase['ref']})
-        if ('ref' in purchase) and val:
-            collection.update_one({'ref':purchase['ref']},{'$set':{'status':'cancelled'}})
+        # val = collection.find({'ref':{'$in':purchase['ref']}})
+        if ('ref' in purchase):
+            collection.update_many({'ref':{'$in':purchase['ref']}},{'$set':{'status':'cancelled'}})
             return Response({'data':'cancelled'},status=201)
         else:
             return Response({'error':'invalid order'},status=400)
@@ -113,7 +113,7 @@ def frontend_package_approve(request):
         sale = request.data
         data = (collection.find_one({'ref':sale['ref']}))
         if data: 
-            if data.status == 'pending':
+            if data['status'] == 'pending':
                 url=env('BASE_URL')+'/sales/package_api/'
                 try:
                     res = requests.post(url,{'ref':sale['ref']})
@@ -124,11 +124,11 @@ def frontend_package_approve(request):
                         }})
                         return Response({'data':'approved successfully'},status=201)
                 except requests.exceptions.ConnectionError:
-                    return Response({'Operation failed'})
+                    return Response({'Operation failed'},status=500)
             else:
-                return Response({'Already updated'})
+                return Response({'Already updated'},status=403)
         else:
-            return Response({'invalid order'})
+            return Response({'invalid order'},status=404)
 
         
 @api_view(['POST'])
@@ -138,7 +138,7 @@ def frontend_ship_approve(request):
         sale = request.data
         data = (collection.find_one({'ref':sale['ref']}))
         if data: 
-            if data.status != 'cancelled':
+            if data['status'] != 'cancelled':
                 url=env('BASE_URL')+'/sales/ships_api/'
                 try:
                     res =requests.post(url,{'ref':data['ref'], 'status':sale['status']})

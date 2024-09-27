@@ -61,7 +61,7 @@ def front_approve(request):
     if request.method == "POST":
         purchase = request.data
         data = (collection.find_one({'ref':purchase['ref']}))
-        if data and data.status == 'pending':
+        if data and data['status'] == 'pending':
             url=env('BASE_URL')+'/purchases/purchase/'
             try:
                 response = requests.post(url,{'ref':data['ref']})

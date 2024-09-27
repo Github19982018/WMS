@@ -50,7 +50,7 @@ def frontend(request):
         purchase = request.data
         data = dict(collection.find_one({'ref':purchase['ref']}))
         if data: 
-            if data.status != 'cancelled':
+            if data['status'] != 'cancelled':
                 url=env('BASE_URL')+'/purchases/supplier/'
                 try:
                     response = requests.post(url,{'ref':data['ref'],'status':purchase['status'],'status_val':purchase['status_val']})
