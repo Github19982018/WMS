@@ -48,11 +48,11 @@ def approve(request):
             collection.insert_one(purchase)
             return Response({'data':'success'},status=201)
         elif ('ref' in purchase) and val:
-            collection.update_one({'ref':purchase['ref']},{'$set':{'items':purchase['items'],'package':purchase['package']}})
+            collection.update_one({'ref':purchase['ref']},{'$set':{'items':purchase['items'], 'purchase':purchase['purchase']}})
             return Response({'data':'success'},status=201)
         else:
             return Response({'invalid order'},status=400)
-    except:
+    except pymongo.errors.InvalidOperation:
         return Response({'error':'error updating data'},status=400)
 
 

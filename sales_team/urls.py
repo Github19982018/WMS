@@ -12,4 +12,5 @@ urlpatterns = [
     path('ships/',views.ships,name='ships'),
     path('packages/<int:id>',views.package,name='package'),
     path('ships/<int:id>',views.ship,name='ship'),
+    path('pay/',views.pay,name='pay'),
 ]
