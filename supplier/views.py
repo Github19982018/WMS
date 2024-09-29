@@ -46,29 +46,33 @@ def backend(request):
     
 @api_view(['POST'])
 def frontend(request):
-    if request.method == "POST":
+    try:
         purchase = request.data
         data = dict(collection.find_one({'ref':purchase['ref']}))
         if data: 
             if data['status'] != 'cancelled':
-                url=env('BASE_URL')+'/purchases/supplier/'
-                try:
-                    response = requests.post(url,{'ref':data['ref'],'status':purchase['status'],'status_val':purchase['status_val']})
-                    collection.update_one({'ref':purchase['ref']},{'$set':{
-                        'status':purchase['status_val']
-                    }})
-                    if response.status_code == 201:
-                        return Response({'data':'order updated'},status=201)
-                    else:
-                        return Response({'error':'cant update the data'},status=400)                    
-                except requests.ConnectionError:
-                    return Response(data={'error':'Operation failed'},status=401)
-                except pymongo.errors.OperationFailure:
-                    return Response(data={'error':'Operation failed'},status=402)
+                if purchase['status'] in [7,8,9]:
+                    url=env('BASE_URL')+'/purchases/supplier/recieve/'
+                    status = purchase['status']-6
+                else:
+                    url=env('BASE_URL')+'/purchases/supplier/'
+                    status = purchase['status']
+                response = requests.post(url,{'ref':data['ref'],'status':status,'status_val':purchase['status_val']})
+                collection.update_one({'ref':purchase['ref']},{'$set':{
+                    'status':purchase['status_val']
+                }})
+                if response.status_code == 201:
+                    return Response({'data':'order updated'},status=201)
+                else:
+                    return Response({'error':'cant update the data'},status=400)                    
             else:
                 return Response(data={'error':'already cancelled order!'},status=404)
         else:
             return Response(data={'error':'invalid order'},status=404)
+    except requests.ConnectionError:
+        return Response(data={'error':'Operation failed'},status=401)
+    except pymongo.errors.OperationFailure:
+        return Response(data={'error':'Operation failed'},status=402)
         
 @api_view(['POST'])
 def cancel(request):
